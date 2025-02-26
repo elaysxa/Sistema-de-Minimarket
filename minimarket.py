@@ -1,6 +1,7 @@
 from utilidades import separador, limpiar_pantalla, pausar
 import os
 from productos import producto
+from clientes import cliente
 lista_productos =[]
 
 while True:
@@ -15,14 +16,13 @@ while True:
     print("4. Datos del minimarket")
     print("5. Salir")
     separador()
-    print("Seleccione una opcion")
     op = int(input("Opcion: "))
     
     match op: 
         case 1:
             producto()
         case 2:
-            print('Clientes')
+            cliente()
         case 3:
            print('Facturar')
         case 4:
