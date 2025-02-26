@@ -35,6 +35,17 @@ def delete_products(index):
 def guardar_datos():
     with open("data/db.json", "w") as archivo:
         json.dump(db, archivo, indent=4)
+def create_facturas(factura):
+    db["Facturas"].append(factura)
+
+def read_facturas():
+    return db["Facturas"]
+
+def update_facturas(index, factura):
+    db["Facturas"][index] = factura
+
+def delete_facturas(index):
+    return db["Facturas"].pop(index)
 
 def cargar_datos():
     global db
