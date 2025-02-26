@@ -5,8 +5,20 @@ db = {
     "Producto": [],
     "Facturas": []
 }
+# CRUD for clients
+def create_clients(cliente):
+    db["Clientes"].append(cliente)
 
-#CRUD for clients
+def read_clients():
+    return db["Clientes"]
+
+def update_clients(index, cliente):
+    db["Clientes"][index] = cliente
+
+def delete_clients(index):
+    return db["Clientes"].pop(index)
+
+#CRUD for products
 def create_products(product):
     db['Producto'].append(product)
 
