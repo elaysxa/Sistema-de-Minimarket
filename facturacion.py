@@ -115,48 +115,30 @@ def modificar_factura():
     separador()
     listar_factura()
     op = int(input('Ingrese el numero de la factura a modificar: '))
-    indice = op-1
-    factura = db.read_facturas()[indice]
-    items = factura['Items']
-    total = factura['Total']
-    producto = db.read_products()
-    limpiar_pantalla()
+    factura = db.read_facturas()[op-1]
     separador()
-    print('    FACTURA GENERADA    ')
+    print(f"Factura seleccionada: {factura['Cliente']}")
     separador()
-    for item in items:
-        print (f"{item['Nombre']} x {item['Cantidad']} = {item ['Subtotal']}")
-    print(f"Total: {total}")
+    print('Producto -  Cantidad - Precio')
     separador()
-    #Modificar factura
-    items = []
-    total = 0.0
-    while True:
-        separador()
-        op = input('Seleccione producto por numero o escriba "fin" para terminar: ')
-        if op.lower() == 'fin':
-            break
-        try:
-            indice =int (op)-1
-            if indice < 0 or indice >= len(producto):
-                print('Producto invalido')
-                pausar()
-                continue
-            cantidad = int(input('Cantidad: '))
-            precio = producto[indice]['Precio']
-            subtotal = precio * cantidad
-            items.append(
-                {
-                    'Nombre': producto[indice]['Nombre'],
-                    'Precio': precio,
-                    'Cantidad': cantidad,
-                    'Subtotal': subtotal
-                }
-            )
-            total += subtotal
-        except ValueError:
-            print('Entrada no valida.')
-            pausar()
+    for i, item in enumerate(factura['Items']):
+        print(f"{i+1}. {item['Nombre']}   {item['Cantidad']} x {item['Precio']} = {item['Subtotal']}")
+    
+    separador()
+    item_op = int(input('Ingrese el numero del producto a modificar: '))
+    item = factura['Items'][item_op-1]
+    separador()
+    nueva_cantidad = int(input(f"Ingrese la nueva cantidad para {item['Nombre']}: "))
+    item['Cantidad'] = nueva_cantidad
+    item['Subtotal'] = item['Precio'] * nueva_cantidad
+    
+    factura['Total'] = sum(item['Subtotal'] for item in factura['Items'])
+    
+    db.update_facturas(op-1, factura)
+    db.guardar_datos()
+    
+    print('Factura modificada con exito')
+    pausar()
     
 
 def imprimir_menu():
