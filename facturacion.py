@@ -8,7 +8,7 @@ def facturar():
     print("Facturacion")
     separador()
     #Elegir un cliente
-    cliente = db.read_clients()
+    nombre = input('Ingrese el nombre del cliente: ')
     producto = db.read_products()
     limpiar_pantalla()
     if not producto:
@@ -66,7 +66,7 @@ def facturar():
     separador()
     #Guardar factura
     factura = {
-        'Cliente': cliente,
+        'Cliente': nombre,
         'Items': items,
         'Total': total
     }
@@ -82,7 +82,7 @@ def facturar():
 def listar_factura():
     limpiar_pantalla()
     separador()
-    print('LISTA DE FACTURAS' )
+    print('  LISTA DE FACTURAS  ' )
     separador()
    
     if len(db.read_facturas()) == 0:
@@ -107,7 +107,9 @@ def eliminar_factura():
     op = int(input('Ingrese el numero de la factura a eliminar: '))
     factura = db.delete_facturas(op-1)
     db.guardar_datos()
+    separador()
     print(f"La factura de {factura['Cliente']} ha sido eliminado")
+    separador()
     pausar()
 
 def modificar_factura():
