@@ -34,7 +34,8 @@ def delete_products(index):
 # Guardar datos en un archivo json
 def guardar_datos():
     with open("data/db.json", "w") as archivo:
-        json.dump(db, archivo, indent=4)
+        json.dump(db, archivo, indent=4)    
+           
 def create_facturas(factura):
     db["Facturas"].append(factura)
 
