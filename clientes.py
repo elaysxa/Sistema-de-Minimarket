@@ -5,13 +5,14 @@ from utilidades import limpiar_pantalla, separador, pausar
 def imprimir_menu():
     limpiar_pantalla()
     separador()
-    print ("Menú de clientes")
+    print ("  MENU DE CLIENTES")
     separador()
     print("1. Listar clientes")
     print("2. Agregar clientes")
     print("3. Modificar clientes")
     print("4. Eliminar clientes")
     print("5.Salir")
+    separador()
     opcion = int(input("Ingrese la opcion deseada: "))
     return opcion
 
@@ -33,8 +34,9 @@ def agregar_cliente():
     
     db.create_clients(cliente)
     db.guardar_datos()
-
-    print("Cliente agregado con exito")
+    separador()
+    print("  CLIENTE AGREGADO CON EXITO")
+    separador()
     pausar()
 
 def listar_clientes():  
@@ -70,7 +72,7 @@ def eliminar_cliente():
 def modificar_cliente():
     limpiar_pantalla()
     separador()
-    print("MODIFICAR CLIENTE")
+    print(" MODIFICAR CLIENTE   ")
     separador()
     listar_clientes()
     op = int(input("Ingrese el numero del cliente a modificar: "))
@@ -88,7 +90,9 @@ def modificar_cliente():
     
     db.update_clients(indice, cliente)
     db.guardar_datos()
-    print("Cliente modificado con exito")
+    separador()
+    print(" CLIENTE MODIFICADO CON EXITO ")
+    separador()
     pausar()
 
 def cliente():
