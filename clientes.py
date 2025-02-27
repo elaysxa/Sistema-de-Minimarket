@@ -21,7 +21,7 @@ def obtener_nuevo_id():
     if not clientes:
         return 1
     return max(cliente.get("Id", 0) for cliente in clientes) + 1
-
+   
 def agregar_cliente():
     limpiar_pantalla()
     separador()
@@ -31,7 +31,7 @@ def agregar_cliente():
     nombre = input("Ingrese el nombre del cliente: ")
     telefono = int(input("Ingrese el telefono del cliente: "))
     edad = int(input("Ingrese la edad del cliente: "))
-    id =obtener_nuevo_id()
+    id = obtener_nuevo_id()
     #Crear cliente
     cliente = {
           "Id": id,
@@ -51,16 +51,20 @@ def agregar_cliente():
 def listar_clientes():  
     limpiar_pantalla()
     separador()
-    print("LISTA DE CLIENTES") 
+    print("Lista de clientes")
     separador()
-    print("   NOMBRE - TELEFONO - EDAD")
-    if len(db.read_clients()) == 0:
+    print("ID - NOMBRE - EDAD - TELEFONO")
+    clientes = db.read_clients()
+    if not clientes:
         print("No hay clientes registrados")
     else:
-        for i, cliente in enumerate(db.read_clients()):
-            print(f"{cliente ['Id']} - {cliente['Nombre']} - {cliente['Telefono']} - {cliente['Edad']}")
+        for cliente in clientes:
+            print(
+                f"{cliente['Id']} - {cliente['Nombre']} - {cliente['Edad']} - {cliente['Telefono']}"
+                )
     separador()
     pausar()
+
 
 def buscar_indice_por_id(cli_id):
     clientes = db.read_clients()
