@@ -16,6 +16,12 @@ def imprimir_menu():
     opcion = int(input("Ingrese la opcion deseada: "))
     return opcion
 
+def obtener_nuevo_id():
+    clientes = db.read_clients()
+    if not clientes:
+        return 1
+    return max(cliente.get("Id", 0) for cliente in clientes) + 1
+
 def agregar_cliente():
     limpiar_pantalla()
     separador()
