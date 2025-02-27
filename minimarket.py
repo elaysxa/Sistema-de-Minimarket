@@ -9,7 +9,7 @@ while True:
     
     os.system("cls")
     separador()
-    print("Esperanza minimarket")
+    print(" ESPERANZA MINIMARKET    ")
     separador()
     print("1. Productos")
     print("2. Clientes")

@@ -5,13 +5,14 @@ import db
 def imprimir_menu():
     os.system("cls")
     separador()
-    print ("Menú de productos")
+    print ("MENU DE PRODUCTOS")
     separador()
     print("1. Listar productos")
     print("2. Agregar productos")
     print("3. Modificar producto")
     print("4. Eliminar producto")
     print("5. Salir")
+    separador()
     opcion = int(input("Ingrese la opcion deseada: "))
     return opcion
 
@@ -32,7 +33,9 @@ def agregar_producto():
           }
     db.create_products(producto)
     db.guardar_datos()
-    print("Producto agregado con exito")
+    separador()
+    print("  PRODUCTO AGREGADO CON EXITO     ")
+    separador()
     pausar()
 
 def listar_productos():
@@ -65,7 +68,7 @@ def eliminar_producto():
 def modificar_producto():
     limpiar_pantalla()
     separador()
-    print("MODIFICAR PRODUCTO")
+    print(" MODIFICAR PRODUCTO  ")
     separador()
     listar_productos()
     separador()
@@ -84,7 +87,9 @@ def modificar_producto():
 
     db.update_products(indice, producto)
     db.guardar_datos()
-    print("Producto modificado con exito")   
+    separador()
+    print("  PRODUCTO MODIFICADO CON EXITO")  
+    separador() 
     pausar()
 
 def producto():
