@@ -6,4 +6,4 @@ def limpiar_pantalla():
     os.system("cls")
 
 def pausar():
-    input("Presione para continuar")
+    input("Presione para continuar ")
