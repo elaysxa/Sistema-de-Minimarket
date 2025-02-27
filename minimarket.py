@@ -2,6 +2,7 @@ from utilidades import separador, limpiar_pantalla, pausar
 import os
 from productos import producto
 from clientes import cliente
+from facturacion import factura
 lista_productos =[]
 
 while True:
@@ -24,7 +25,7 @@ while True:
         case 2:
             cliente()
         case 3:
-           print('Facturar')
+           factura()
         case 4:
             print("Datos del minimarket")
             input("Presione para continuar")
