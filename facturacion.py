@@ -8,13 +8,32 @@ def facturar():
     print("Facturacion")
     separador()
     #Elegir un cliente
-    nombre = input('Ingrese el nombre del cliente: ')
+    clientes = db.read_clients()
+    if not clientes:
+        print("No hay clientes registrados.")
+        pausar()
+        return
+    print("Lista de Clientes")
+    for cli in clientes:
+        print(f"{cli['Id']} - {cli['Nombre']}")
+    try:
+        cliente_id = int(input("Ingrese el ID del cliente: "))
+    except ValueError:
+        print("Entrada no válida.")
+        pausar()
+        return
+    if not any(cli["Id"] == cliente_id for cli in clientes):
+        print("Cliente no encontrado.")
+        pausar()
+        return
+
     producto = db.read_products()
     limpiar_pantalla()
     if not producto:
         print('No hay productos disponibles')
         pausar()
         return
+    separador()
     print('Productos disponibles')
     separador()
 
@@ -53,50 +72,41 @@ def facturar():
         print('No se agregaron productos a la factura ')
         pausar()
         return
-
-    #Mostrar la fatura
     limpiar_pantalla()
     separador()
-    print('    FACTURA GENERADA    ')
+    print(" Factura generada: ")
     separador()
-
     for item in items:
-        print (f"{item['Nombre']} x {item['Cantidad']} = {item ['Subtotal']}")
+        print(f"{item['Nombre']} x {item['Cantidad']} = {item['Subtotal']}")
     print(f"Total: {total}")
     separador()
-    #Guardar factura
-    factura = {
-        'Cliente': nombre,
-        'Items': items,
-        'Total': total
-    }
-    
-    print(f"Total: {factura['Total']}")
+    factura = {"Cliente": cliente_id, "Items": items, "Total": total}
     db.create_facturas(factura)
     db.guardar_datos()
     separador()
     print('  FACTURA GENERADA CON EXITO  ')
     separador()
     pausar()
- 
+
 def listar_factura():
     limpiar_pantalla()
     separador()
     print('  LISTA DE FACTURAS  ' )
     separador()
    
-    if len(db.read_facturas()) == 0:
-        print('No hay productos registros ')
+    facturas = db.read_facturas()
+    clientes = db.read_clients()
+    if not facturas:
+        print("No hay facturas registradas.")
     else:
-        for i, factura in enumerate(db.read_facturas()):
-            print(f"{i+1}. {factura['Cliente']}")
-            separador()
-            print('Producto -  Cantidad - Precio')
-            separador()
-            for item in factura['Items']:
-                print(f"{item['Nombre']}   {item['Cantidad']} x {item['Precio']} = {item['Subtotal']}")    
-            print(f"------Total: {factura['Total']}------\n") 
-        pausar()
+        for i, fac in enumerate(facturas):
+            cliente_nombre = next(
+                (cli["Nombre"] for cli in clientes if cli["Id"] == fac["Cliente"]),
+                "Desconocido",
+            )
+            print(f"{i+1}. Cliente: {cliente_nombre} - Total: {fac['Total']}")
+    pausar()
+
 
 def eliminar_factura():
     limpiar_pantalla()
@@ -144,7 +154,6 @@ def modificar_factura():
     print('Factura modificada con exito')
     pausar()
     
-
 def imprimir_menu():
     os.system("cls")
     separador()
