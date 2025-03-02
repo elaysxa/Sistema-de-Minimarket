@@ -5,13 +5,13 @@ import db
 def imprimir_menu():
     os.system("cls")
     separador()
-    print ("MENU DE PRODUCTOS")
+    print ("  MENU DE PRODUCTOS")
     separador()
-    print("1. Listar productos")
-    print("2. Agregar productos")
-    print("3. Modificar producto")
-    print("4. Eliminar producto")
-    print("5. Salir")
+    print("1.📃  Listar productos")
+    print("2.➕  Agregar productos")
+    print("3.🔁  Modificar producto")
+    print("4.🗑️  Eliminar producto")
+    print("5.🔙  Salir")
     separador()
     opcion = int(input("Ingrese la opcion deseada: "))
     return opcion
@@ -19,7 +19,7 @@ def imprimir_menu():
 def agregar_producto():
     limpiar_pantalla()
     separador()
-    print("AGREGAR PRODUCTO")
+    print("  ➕ AGREGAR PRODUCTO")
     separador()
     #Ingresar datos del producto
     nombre = input("Ingrese el nombre del producto: ")
@@ -34,18 +34,19 @@ def agregar_producto():
     db.create_products(producto)
     db.guardar_datos()
     separador()
-    print("  PRODUCTO AGREGADO CON EXITO     ")
+    print("  ✅ PRODUCTO AGREGADO CON EXITO     ")
     separador()
     pausar()
 
 def listar_productos():
     limpiar_pantalla()
     separador()
-    print("LISTA DE PRODUCTOS") 
+    print(" 📃 LISTA DE PRODUCTOS") 
     separador()
     print("   NOMBRE - PRECIO - CANTIDAD")
+    separador()
     if len(db.read_products()) == 0:
-        print("No hay productos registrados")
+        print(" ❌  No hay productos registrados")
     else:
         for i, producto in enumerate(db.read_products()):
             print(f"{i+1}. {producto['Nombre']} - {producto['Precio']} - {producto['Cantidad']}")
@@ -55,20 +56,20 @@ def listar_productos():
 def eliminar_producto():
     limpiar_pantalla()
     separador()
-    print("ELIMINAR PRODUCTO")
+    print(" 🗑️ ELIMINAR PRODUCTO")
     separador()
     listar_productos()
     separador()
     op = int(input("Ingrese el numero del producto a eliminar: "))
     producto = db.delete_products(op-1)
     db.guardar_datos()
-    print(f"El producto {producto['Nombre']} ha sido eliminado")
+    print(f" ✅  El producto {producto['Nombre']} ha sido eliminado")
     pausar() 
 
 def modificar_producto():
     limpiar_pantalla()
     separador()
-    print(" MODIFICAR PRODUCTO  ")
+    print(" 🔁 MODIFICAR PRODUCTO  ")
     separador()
     listar_productos()
     separador()
@@ -88,7 +89,7 @@ def modificar_producto():
     db.update_products(indice, producto)
     db.guardar_datos()
     separador()
-    print("  PRODUCTO MODIFICADO CON EXITO")  
+    print("  ✅ PRODUCTO MODIFICADO CON EXITO")  
     separador() 
     pausar()
 

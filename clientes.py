@@ -7,11 +7,11 @@ def imprimir_menu():
     separador()
     print ("  MENU DE CLIENTES")
     separador()
-    print("1. Listar clientes")
-    print("2. Agregar clientes")
-    print("3. Modificar clientes")
-    print("4. Eliminar clientes")
-    print("5.Salir")
+    print("1.👤  Listar clientes")
+    print("2.➕  Agregar clientes")
+    print("3.🔁  Modificar clientes")
+    print("4.❌  Eliminar clientes")
+    print("5.🔙  Salir")
     separador()
     opcion = int(input("Ingrese la opcion deseada: "))
     return opcion
@@ -25,7 +25,7 @@ def obtener_nuevo_id():
 def agregar_cliente():
     limpiar_pantalla()
     separador()
-    print("AGREGAR CLIENTE")
+    print("➕ AGREGAR CLIENTE")
     separador()
     #Ingresar datos del cliente
     nombre = input("Ingrese el nombre del cliente: ")
@@ -44,19 +44,19 @@ def agregar_cliente():
     db.create_clients(cliente)
     db.guardar_datos()
     separador()
-    print("  CLIENTE AGREGADO CON EXITO")
+    print("  ✅ CLIENTE AGREGADO CON EXITO")
     separador()
     pausar()
 
 def listar_clientes():  
     limpiar_pantalla()
     separador()
-    print("Lista de clientes")
+    print(" 👤 Lista de clientes")
     separador()
     print("ID - NOMBRE - EDAD - TELEFONO")
     clientes = db.read_clients()
     if not clientes:
-        print("No hay clientes registrados")
+        print(" ❌ No hay clientes registrados")
     else:
         for cliente in clientes:
             print(
@@ -64,7 +64,6 @@ def listar_clientes():
                 )
     separador()
     pausar()
-
 
 def buscar_indice_por_id(cli_id):
     clientes = db.read_clients()
@@ -79,12 +78,12 @@ def eliminar_cliente():
         cli_id = int(input("Ingrese el ID del cliente a eliminar: "))
         indice = buscar_indice_por_id(cli_id)
         if indice is None:
-            print("Cliente no encontrado.")
+            print(" ❌  Cliente no encontrado.")
         else:
             cliente = db.delete_clients(indice)
-            print(f"El cliente {cliente['Nombre']} ha sido eliminado")
+            print(f" ✅ El cliente {cliente['Nombre']} ha sido eliminado")
     except ValueError:
-        print("Entrada no válida.")
+        print("⚠️  Entrada no válida.")
     pausar()
 
 def modificar_cliente():
@@ -93,12 +92,12 @@ def modificar_cliente():
         cli_id = int(input("Ingrese el ID del cliente a modificar: "))
         indice = buscar_indice_por_id(cli_id)
         if indice is None:
-            print("Cliente no encontrado.")
+            print(" ❌  Cliente no encontrado.")
             pausar()
             return
         cliente = db.read_clients()[indice]
     except ValueError:
-        print("Entrada no válida")
+        print("⚠️  Entrada no válida")
         pausar()
         return
 
@@ -112,7 +111,7 @@ def modificar_cliente():
     if telefono != "":
         cliente["Telefono"] = telefono
     db.update_clients(indice, cliente)
-    print("Cliente modificado con éxito")
+    print("✅  Cliente modificado con éxito")
     pausar()
 
 

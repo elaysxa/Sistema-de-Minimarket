@@ -5,36 +5,36 @@ from utilidades import limpiar_pantalla, separador, pausar
 def facturar():
     limpiar_pantalla()
     separador()
-    print("Facturacion")
+    print(" 📠  FACTURACION ")
     separador()
     #Elegir un cliente
     clientes = db.read_clients()
     if not clientes:
-        print("No hay clientes registrados.")
+        print(" ❌  No hay clientes registrados.")
         pausar()
         return
-    print("Lista de Clientes")
+    print("📃 Lista de Clientes")
     for cli in clientes:
         print(f"{cli['Id']} - {cli['Nombre']}")
     try:
         cliente_id = int(input("Ingrese el ID del cliente: "))
     except ValueError:
-        print("Entrada no válida.")
+        print("⚠️ Entrada no válida.")
         pausar()
         return
     if not any(cli["Id"] == cliente_id for cli in clientes):
-        print("Cliente no encontrado.")
+        print("❌ Cliente no encontrado.")
         pausar()
         return
 
     producto = db.read_products()
     limpiar_pantalla()
     if not producto:
-        print('No hay productos disponibles')
+        print(' ❌ No hay productos disponibles')
         pausar()
         return
     separador()
-    print('Productos disponibles')
+    print(' 🧾 Productos disponibles')
     separador()
 
     for i, prod in enumerate(producto):
@@ -50,7 +50,7 @@ def facturar():
         try:
             indice =int (op)-1
             if indice < 0 or indice >= len(producto):
-                print('Producto invalido')
+                print(' ⚠️ Producto invalido')
                 pausar()
                 continue
             cantidad = int(input('Cantidad: '))
@@ -66,15 +66,15 @@ def facturar():
             )
             total += subtotal
         except ValueError:
-            print('Entrada no valida.')
+            print(' ⚠️ Entrada no valida.')
             pausar()
     if not items:
-        print('No se agregaron productos a la factura ')
+        print(' ⚠️ No se agregaron productos a la factura ')
         pausar()
         return
     limpiar_pantalla()
     separador()
-    print(" Factura generada: ")
+    print(" 🧾 Factura generada: ")
     separador()
     for item in items:
         print(f"{item['Nombre']} x {item['Cantidad']} = {item['Subtotal']}")
@@ -84,20 +84,20 @@ def facturar():
     db.create_facturas(factura)
     db.guardar_datos()
     separador()
-    print('  FACTURA GENERADA CON EXITO  ')
+    print('  ✅ FACTURA GENERADA CON EXITO  ')
     separador()
     pausar()
 
 def listar_factura():
     limpiar_pantalla()
     separador()
-    print('  LISTA DE FACTURAS  ' )
+    print('  📃 LISTA DE FACTURAS  ' )
     separador()
    
     facturas = db.read_facturas()
     clientes = db.read_clients()
     if not facturas:
-        print("No hay facturas registradas.")
+        print(" ❌ No hay facturas registradas.")
     else:
         for i, fac in enumerate(facturas):
             cliente_nombre = next(
@@ -107,18 +107,17 @@ def listar_factura():
             print(f"{i+1}. Cliente: {cliente_nombre} - Total: {fac['Total']}")
     pausar()
 
-
 def eliminar_factura():
     limpiar_pantalla()
     separador()
-    print('ELIMINAR FACTURA')
+    print(' 🗑️ ELIMINAR FACTURA')
     separador()
     listar_factura()
     op = int(input('Ingrese el numero de la factura a eliminar: '))
     factura = db.delete_facturas(op-1)
     db.guardar_datos()
     separador()
-    print(f"La factura de {factura['Cliente']} ha sido eliminado")
+    print(f" ✅ La factura de {factura['Cliente']} ha sido eliminado")
     separador()
     pausar()
 
@@ -133,7 +132,7 @@ def modificar_factura():
         return
     limpiar_pantalla()
     separador()
-    print("Editar Factura")
+    print("🔁   MODIFICAR FACTURA ")
     separador()
     nuevo_cliente = input(f"Nombre del cliente ({factura_actual['Cliente']}): ")
     if nuevo_cliente != "":
@@ -242,13 +241,13 @@ def modificar_factura():
 def imprimir_menu():
     os.system("cls")
     separador()
-    print ("Menú de facturacion")
+    print (" 📠 Menú de facturacion")
     separador()
-    print("1. Facturar")
-    print("2. Eliminar factura")
-    print("3. Modificar factura")
-    print("4. Listar factura")
-    print("5. Salir")
+    print("1.🧾  Facturar")
+    print("2.🗑️  Eliminar factura")
+    print("3.🔁  Modificar factura")
+    print("4.🧾  Listar factura")
+    print("5.🔙  Salir")
     separador()
     op = int(input("Ingrese la opcion deseada: "))
     return op
