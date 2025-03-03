@@ -53,14 +53,15 @@ def listar_clientes():
     separador()
     print(" 👤 Lista de clientes")
     separador()
-    print("ID - NOMBRE - EDAD - TELEFONO")
+    print(f"{'ID':<4}{'NOMBRE':<18}{'TELEFONO':>15}{'EDAD':>10}")
+    separador()
     clientes = db.read_clients()
     if not clientes:
         print(" ❌ No hay clientes registrados")
     else:
         for cliente in clientes:
             print(
-                f"{cliente['Id']} - {cliente['Nombre']} - {cliente['Edad']} - {cliente['Telefono']}"
+                f"{cliente['Id']:<4}{cliente['Nombre']:<18}{cliente['Telefono']:>15}{cliente['Edad']:10}"
                 )
     separador()
     pausar()
@@ -81,6 +82,7 @@ def eliminar_cliente():
             print(" ❌  Cliente no encontrado.")
         else:
             cliente = db.delete_clients(indice)
+            db.guardar_datos()
             print(f" ✅ El cliente {cliente['Nombre']} ha sido eliminado")
     except ValueError:
         print("⚠️  Entrada no válida.")
@@ -111,6 +113,7 @@ def modificar_cliente():
     if telefono != "":
         cliente["Telefono"] = telefono
     db.update_clients(indice, cliente)
+    db.guardar_datos()
     print("✅  Cliente modificado con éxito")
     pausar()
 

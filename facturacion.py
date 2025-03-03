@@ -5,7 +5,7 @@ from utilidades import limpiar_pantalla, separador, pausar
 def facturar():
     limpiar_pantalla()
     separador()
-    print(" 📠  FACTURACION ")
+    print("         📠  FACTURACION ")
     separador()
     #Elegir un cliente
     clientes = db.read_clients()
@@ -14,9 +14,11 @@ def facturar():
         pausar()
         return
     print("📃 Lista de Clientes")
+    separador()
     for cli in clientes:
-        print(f"{cli['Id']} - {cli['Nombre']}")
+        print(f"{cli['Id']:<6} {cli['Nombre']}")
     try:
+        separador()
         cliente_id = int(input("Ingrese el ID del cliente: "))
     except ValueError:
         print("⚠️ Entrada no válida.")
@@ -36,9 +38,11 @@ def facturar():
     separador()
     print(' 🧾 Productos disponibles')
     separador()
+    print(f"{'NO':<4}{'NOMBRE':<15}{'PRECIO ':>15}")
+    separador()
 
-    for i, prod in enumerate(producto):
-        print(f"{i + 1}. {prod['Nombre']} - Precio: {prod['Precio']}")
+    for i, productos in enumerate(producto):
+        print(f"{i+1:<4} {productos['Nombre']:<15}{productos['Precio']:>13,.0f}")
         
     items = []
     total = 0.0
@@ -74,16 +78,18 @@ def facturar():
         return
     limpiar_pantalla()
     separador()
-    print(" 🧾 Factura generada: ")
+    print("     🧾 FACTURA GENERADA  ")
+    separador()
+    print(f" {'Nombre':<15}{'Cantidad':>8}  {'Precio':<10} {'Subtotal':>8}")
     separador()
     for item in items:
-        print(f"{item['Nombre']} x {item['Cantidad']} = {item['Subtotal']}")
-    print(f"Total: {total}")
+        print(f"{item['Nombre']:<16}{item['Cantidad']:>8}  {item['Precio']:<10,.0f}{item['Subtotal']:>8,.0f}")
+    separador()
+    print(f"{'Total: ':>35}{total:,.0f}")
     separador()
     factura = {"Cliente": cliente_id, "Items": items, "Total": total}
     db.create_facturas(factura)
     db.guardar_datos()
-    separador()
     print('  ✅ FACTURA GENERADA CON EXITO  ')
     separador()
     pausar()
@@ -93,7 +99,8 @@ def listar_factura():
     separador()
     print('  📃 LISTA DE FACTURAS  ' )
     separador()
-   
+    print(f"{'ID':<4}{'CLIENTE':<18}{'TOTAL ':>10}")
+    separador()
     facturas = db.read_facturas()
     clientes = db.read_clients()
     if not facturas:
@@ -104,7 +111,8 @@ def listar_factura():
                 (cli["Nombre"] for cli in clientes if cli["Id"] == fac["Cliente"]),
                 "Desconocido",
             )
-            print(f"{i+1}. Cliente: {cliente_nombre} - Total: {fac['Total']}")
+            print(f"{i+1:<4} {cliente_nombre:<18} {fac['Total']:>10,.2F}")
+    separador()
     pausar()
 
 def eliminar_factura():
@@ -244,7 +252,7 @@ def imprimir_menu():
     print (" 📠 Menú de facturacion")
     separador()
     print("1.🧾  Facturar")
-    print("2.🗑️  Eliminar factura")
+    print("2.🗑️   Eliminar factura")
     print("3.🔁  Modificar factura")
     print("4.🧾  Listar factura")
     print("5.🔙  Salir")
