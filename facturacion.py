@@ -93,7 +93,8 @@ def listar_factura():
     separador()
     print('  📃 LISTA DE FACTURAS  ' )
     separador()
-   
+    print(f"{'ID':<4}{'CLIENTE':<18}{'TOTAL ':>10}")
+    separador()
     facturas = db.read_facturas()
     clientes = db.read_clients()
     if not facturas:
@@ -104,7 +105,8 @@ def listar_factura():
                 (cli["Nombre"] for cli in clientes if cli["Id"] == fac["Cliente"]),
                 "Desconocido",
             )
-            print(f"{i+1}. Cliente: {cliente_nombre} - Total: {fac['Total']}")
+            print(f"{i+1:<4} {cliente_nombre:<18} {fac['Total']:>10,.2F}")
+    separador()
     pausar()
 
 def eliminar_factura():
@@ -244,7 +246,7 @@ def imprimir_menu():
     print (" 📠 Menú de facturacion")
     separador()
     print("1.🧾  Facturar")
-    print("2.🗑️  Eliminar factura")
+    print("2.🗑️   Eliminar factura")
     print("3.🔁  Modificar factura")
     print("4.🧾  Listar factura")
     print("5.🔙  Salir")
