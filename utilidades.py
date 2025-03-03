@@ -1,5 +1,5 @@
 def separador():
-    print("-"*30)
+    print("-"*50)
 
 def limpiar_pantalla():
     import os
