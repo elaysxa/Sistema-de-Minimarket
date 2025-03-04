@@ -149,18 +149,20 @@ def modificar_factura():
     # Iniciar con los items actuales
     items = factura_actual.get("Items", [])
     while True:
+        
         limpiar_pantalla()
         separador()
-        print("Items actuales de la factura")
+        print("FACTURA ACTUAL  ")
+        separador()
+        print(f" {'NO':<4} {'Nombre':<15}{'Cantidad':>8}  {'Precio':<10} {'Subtotal':>8}")
         separador()
         if items:
             for idx, item in enumerate(items):
-                print(
-                    f"{idx+1}. {item['Nombre']} x {item['Cantidad']} = {item['Subtotal']}"
-                )
-            print(f"Total: {factura_actual['Total']}")
+                print(f"{idx+1:<4}{item['Nombre']:<16}{item['Cantidad']:>8}  {item['Precio']:<10,.0f}{item['Subtotal']:>8,.0f}")
+            separador()
+            print(f"{'Total: ':>35}{sum(item['Subtotal'] for item in items):,.0f}")
         else:
-            print("No hay items en la factura.")
+            print(" ❌ No hay items en la factura.")
         separador()
         print("Opciones:")
         separador()
@@ -178,7 +180,7 @@ def modificar_factura():
             try:
                 num = int(input("Número del item a modificar: ")) - 1
                 if num < 0 or num >= len(items):
-                    print("Índice inválido.")
+                    print(" ⚠️ Índice inválido.")
                     pausar()
                 else:
                     nueva_cantidad = input(
@@ -188,50 +190,59 @@ def modificar_factura():
                         nueva_cantidad = int(nueva_cantidad)
                         items[num]["Cantidad"] = nueva_cantidad
                         items[num]["Subtotal"] = nueva_cantidad * items[num]["Precio"]
+                        print('✅ Item modificado ')
             except ValueError:
-                print("Entrada no válida.")
+                print(" ⚠️ Entrada no válida.")
                 pausar()
         elif opcion == 2:
             try:
                 num = int(input("Número del item a eliminar: ")) - 1
                 if num < 0 or num >= len(items):
-                    print("Índice inválido.")
+                    print(" ⚠️ Índice inválido.")
                     pausar()
                 else:
                     eliminado = items.pop(num)
-                    print(f"Se eliminó el item: {eliminado['Nombre']}")
+                    print(f" 🗑️ Se eliminó el item: {eliminado['Nombre']}")
                     pausar()
             except ValueError:
-                print("Entrada no válida.")
+                print(" ❌ Entrada no válida.")
                 pausar()
         elif opcion == 3:
+            total = factura_actual['Total']
             productos = db.read_products()
             if not productos:
                 print("No hay productos disponibles.")
                 pausar()
             else:
-                print("Productos disponibles:")
+                separador()
+                print(' 🧾 Productos disponibles')
+                separador()
+                print(f"{'NO':<4}{'NOMBRE':<15}{'PRECIO ':>15}")
+                separador()
+
                 for i, prod in enumerate(productos):
-                    print(f"{i+1}. {prod['Nombre']} - Precio: {prod['Precio']}")
+                    print(f"{i+1:<4} {prod['Nombre']:<15}{prod['Precio']:>13,.0f}")
+                separador()
                 try:
                     op_prod = int(input("Seleccione producto por número: ")) - 1
                     if op_prod < 0 or op_prod >= len(productos):
-                        print("Producto inválido.")
+                        print(" ❌ Producto inválido.")
                         pausar()
-                    else:
-                        cantidad = int(input("Cantidad: "))
-                        precio = productos[op_prod]["Precio"]
-                        subtotal = precio * cantidad
-                        items.append(
-                            {
-                                "Nombre": productos[op_prod]["Nombre"],
-                                "Precio": precio,
-                                "Cantidad": cantidad,
-                                "Subtotal": subtotal,
-                            }
+                        continue
+                    cantidad = int(input("Cantidad: "))
+                    precio = productos[op_prod]["Precio"]
+                    subtotal = precio * cantidad
+                    items.append(
+                        {
+                            "Nombre": productos[op_prod]["Nombre"],
+                            "Precio": precio,
+                            "Cantidad": cantidad,
+                            "Subtotal": subtotal
+                        }         
                         )
+                    
                 except ValueError:
-                    print("Entrada no válida.")
+                    print(" ⚠️ Entrada no válida.")
                     pausar()
         elif opcion == 4:
             break
@@ -242,7 +253,7 @@ def modificar_factura():
     db.update_facturas(index_factura, factura_actual)
     db.guardar_datos()
     separador()
-    print("Factura editada con éxito.")
+    print(" ✅ Factura editada con éxito.")
     separador()
     pausar()
     
