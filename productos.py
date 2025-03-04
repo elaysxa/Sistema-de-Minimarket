@@ -43,13 +43,13 @@ def listar_productos():
     separador()
     print(" 📃 LISTA DE PRODUCTOS") 
     separador()
-    print("   NOMBRE - PRECIO - CANTIDAD")
+    print(f"{'NO':<4}{'NOMBRE':<15}{'PRECIO ':>15}{'CANTIDAD':>10}")
     separador()
     if len(db.read_products()) == 0:
         print(" ❌  No hay productos registrados")
     else:
         for i, producto in enumerate(db.read_products()):
-            print(f"{i+1}. {producto['Nombre']} - {producto['Precio']} - {producto['Cantidad']}")
+            print(f"{i+1:<4} {producto['Nombre']:<15}{producto['Precio']:>13,.0f}{producto['Cantidad']:>8}")
     separador()
     pausar()
 
