@@ -255,7 +255,7 @@ class ProductosUI:
             return
 
         # Crear ventana para editar
-        self.edit_window = tk.Toplevel(self.root)
+        self.edit_window = tk.Toplevel(self.main_frame.winfo_toplevel())
         self.edit_window.title(f"Editar Producto: {producto.nombre}")
         self.edit_window.geometry("400x300")
         self.edit_window.configure(bg="#f0f0f0")

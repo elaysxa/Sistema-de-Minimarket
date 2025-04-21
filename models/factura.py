@@ -9,6 +9,7 @@ class ItemFactura:
         id=None,
         factura_id=None,
         producto_nombre="",
+        producto_id=None,
         precio=0.0,
         cantidad=0,
         subtotal=0.0,
@@ -16,6 +17,7 @@ class ItemFactura:
         self.id = id
         self.factura_id = factura_id
         self.producto_nombre = producto_nombre
+        self.producto_id = producto_id
         self.precio = precio
         self.cantidad = cantidad
         self.subtotal = subtotal
@@ -26,6 +28,7 @@ class ItemFactura:
             "id": self.id,
             "factura_id": self.factura_id,
             "nombre": self.producto_nombre,
+            "producto_id": self.producto_id,
             "precio": self.precio,
             "cantidad": self.cantidad,
             "subtotal": self.subtotal,
@@ -61,8 +64,8 @@ class Factura:
 
                 # Insertar los items de la factura
                 query_item = """
-                    INSERT INTO items_factura (factura_id, producto_nombre, precio, cantidad, subtotal)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO items_factura (factura_id, producto_nombre, producto_id, precio, cantidad, subtotal)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 """
 
                 for item in factura.items:
@@ -72,6 +75,7 @@ class Factura:
                         (
                             item.factura_id,
                             item.producto_nombre,
+                            item.producto_id,
                             item.precio,
                             item.cantidad,
                             item.subtotal,
@@ -102,6 +106,7 @@ class Factura:
                     item = ItemFactura(
                         id=row_item["id"],
                         factura_id=row_item["factura_id"],
+                        producto_id=row_item["producto_id"],
                         producto_nombre=row_item["producto_nombre"],
                         precio=row_item["precio"],
                         cantidad=row_item["cantidad"],
@@ -143,6 +148,7 @@ class Factura:
                     item = ItemFactura(
                         id=row_item["id"],
                         factura_id=row_item["factura_id"],
+                        producto_id=row_item["producto_id"],
                         producto_nombre=row_item["producto_nombre"],
                         precio=row_item["precio"],
                         cantidad=row_item["cantidad"],
@@ -185,8 +191,8 @@ class Factura:
 
                 # Insertar los nuevos items
                 query_item = """
-                    INSERT INTO items_factura (factura_id, producto_nombre, precio, cantidad, subtotal)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO items_factura (factura_id, producto_nombre, producto_id, precio, cantidad, subtotal)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 """
 
                 for item in factura.items:
@@ -196,6 +202,7 @@ class Factura:
                         (
                             item.factura_id,
                             item.producto_nombre,
+                            item.producto_id,
                             item.precio,
                             item.cantidad,
                             item.subtotal,

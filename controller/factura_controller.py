@@ -1,3 +1,4 @@
+from math import e
 from models.factura import Factura, ItemFactura
 from models.cliente import Cliente
 from models.producto import Producto
@@ -52,6 +53,7 @@ class FacturaController:
                 # Crear el item
                 item = ItemFactura(
                     producto_nombre=producto.nombre,
+                    producto_id=producto_id,
                     precio=producto.precio,
                     cantidad=cantidad,
                     subtotal=subtotal,
@@ -122,3 +124,81 @@ class FacturaController:
             return facturas_cliente
         except ValueError:
             return []
+        except Exception as e:
+            return f"Error al obtener las facturas del cliente: {str(e)}"
+    
+    @staticmethod
+    def modificar_factura(factura_id, cliente_id, items_data):
+        """
+        Modifica una factura existente
+
+        Args:
+            factura_id: ID de la factura a modificar
+            cliente_id: ID del nuevo cliente
+            items_data: Lista de diccionarios con los datos de los items (producto_id, cantidad)
+
+        Returns:
+            (Boolean, String): Tupla con el resultado de la operación y un mensaje
+        """
+        try:
+            # Validar cliente
+            cliente_id = int(cliente_id)
+            cliente = Cliente.get_by_id(cliente_id)
+            if not cliente:
+                return False, f"Cliente con ID {cliente_id} no encontrado"
+
+            # Validar que haya items
+            if not items_data or len(items_data) == 0:
+                return False, "La factura debe tener al menos un producto"
+
+            # Obtener la factura existente
+            factura = Factura.get_by_id(factura_id)
+            if not factura:
+                return False, f"Factura con ID {factura_id} no encontrada"
+
+            # Crear los nuevos items y verificar stock
+            items_factura = []
+            total_factura = 0
+
+            for item_data in items_data:
+                producto_id = int(item_data["producto_id"])
+                cantidad = int(item_data["cantidad"])
+
+                # Verificar que haya suficiente stock
+                stock_suficiente, mensaje = (
+                    ProductoController.verificar_stock_disponible(producto_id, cantidad)
+                )
+                if not stock_suficiente:
+                    return False, mensaje
+
+                # Obtener el producto
+                producto = Producto.get_by_id(producto_id)
+                subtotal = producto.precio * cantidad
+
+                # Crear el item
+                item = ItemFactura(
+                    producto_nombre=producto.nombre,
+                    precio=producto.precio,
+                    cantidad=cantidad,
+                    subtotal=subtotal,
+                )
+                items_factura.append(item)
+                total_factura += subtotal
+
+                # Actualizar el stock del producto
+                nuevo_stock = producto.cantidad - cantidad
+                ProductoController.actualizar_stock(producto_id, nuevo_stock)
+
+            # Modificar la factura
+            factura.cliente_id = cliente_id
+            factura.items = items_factura
+            factura.total = total_factura
+
+            # Guardar en la base de datos
+            if Factura.update(factura):
+                return (
+                    True,
+                    f"Factura modificada correctamente. Total: ${total_factura  :.2f}",
+                )    
+        except ValueError as e:
+            return False, f"Error en los datos: {str(e)}"   

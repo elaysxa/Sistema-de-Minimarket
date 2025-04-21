@@ -19,7 +19,7 @@ class FacturaUI:
         ttk.Button(self.marco_botones, text="Listar Facturas", command=self.listar_facturas).pack(side=tk.LEFT, padx=10)
 
         self.marco_formulario = ttk.Frame(self.root)
-        self.marco_formulario.pack(fill=tk.BOTH, expand=True)
+        self.marco_formulario.pack(fill='both', expand=False)
 
     def setup_ui(self):
         self.style = ttk.Style()
@@ -35,7 +35,7 @@ class FacturaUI:
             relief="flat",
             foreground="black",
             font=("Poppins", 11, "bold"),
-            padding=6)
+            padding=2)
 
         self.style.configure("Treeview",
             background="white",
@@ -71,7 +71,7 @@ class FacturaUI:
         self.tabla_productos.heading("precio", text="Precio")
         self.tabla_productos.column("nombre", width=200)
         self.tabla_productos.column("precio", width=80)
-        self.tabla_productos.grid(row=1, column=0, padx=10)
+        self.tabla_productos.grid(row=1, column=0, padx=(0,2))
         self.tabla_productos.bind("<Double-1>", self.agregar_producto)
 
         ttk.Label(marco_tablas, text="Items en factura").grid(row=0, column=1)
@@ -81,28 +81,21 @@ class FacturaUI:
         self.tabla_items.heading("cantidad", text="Cantidad")
         self.tabla_items.heading("subtotal", text="Subtotal")
         for col in ("nombre", "precio", "cantidad", "subtotal"):
-            self.tabla_items.column(col, width=100)
+            self.tabla_items.column(col, width=140)
         self.tabla_items.grid(row=1, column=1, padx=10)
 
-        ttk.Button(marco_tablas, text="Eliminar item", command=self.eliminar_item).grid(row=2, column=1, pady=5)
+        ttk.Button(marco_tablas, text="Eliminar item", command=self.eliminar_item).grid(row=2, column=1, pady=10)
 
-        ttk.Button(self.marco_formulario, text="Guardar Factura", command=self.guardar_factura).grid(row=2, column=0, columnspan=2, pady=10)
 
-        # Mostrar el total debajo del botón
-        # Contenedor para botón y total
         contenedor_acciones = ttk.Frame(self.marco_formulario)
         contenedor_acciones.grid(row=2, column=0, columnspan=2, sticky="ew", padx=10)
-        contenedor_acciones.columnconfigure(0, weight=1)  # Permite empujar el total a la derecha
+        contenedor_acciones.columnconfigure(0, weight=1)  
 
         # Botón a la izquierda
-        ttk.Button(contenedor_acciones, text="Guardar Factura", command=self.guardar_factura).grid(
-            row=0, column=0, sticky="w"
-        )
+        ttk.Button(marco_tablas, text="Guardar Factura", command=self.guardar_factura).grid(row=2, column=0,pady=10)
 
 # Total a la derecha, ligeramente más arriba
-        ttk.Label(contenedor_acciones, textvariable=self.total_var, style="TLabel").grid(
-    row=0, column=1, sticky="e", padx=5
-)
+        ttk.Label(marco_tablas, textvariable=self.total_var, style="TLabel").grid(row=2, column=1, sticky="e", padx=5)
 
         self.cargar_productos()
 
@@ -193,7 +186,97 @@ class FacturaUI:
         tabla.column("id", width=100, anchor="center")
         tabla.column("cliente", width=120, anchor="center")
         tabla.column("total", width=100, anchor="center")
-        tabla.pack(padx=30, pady=30, fill=tk.BOTH, expand=True)
+        tabla.pack(padx=30, pady=10,  expand=True)
+                # Botones de acción para facturas
+        acciones_frame = ttk.Frame(self.marco_formulario)
+        acciones_frame.pack(pady=10)
+
+        ttk.Button(acciones_frame, text="Modificar Factura", command=lambda: self.modificar_factura(tabla)).pack(side=tk.LEFT, padx=10)
+        ttk.Button(acciones_frame, text="Eliminar Factura", command=lambda: self.eliminar_factura(tabla)).pack(side=tk.LEFT, padx=10)
 
         for f in FacturaController.obtener_todas_facturas():
             tabla.insert("", tk.END, values=(f.id, f.cliente_id, f.total))
+    
+    def eliminar_factura(self, tabla):
+        
+        seleccion = tabla.selection()
+        if not seleccion:
+            messagebox.showwarning("Advertencia", "Seleccione una factura para eliminar")
+            return
+
+        factura_id = tabla.item(seleccion[0])["values"][0]
+
+        confirmar = messagebox.askyesno("Confirmar", f"¿Eliminar la factura ID {factura_id}?")
+        if confirmar:
+            exito = FacturaController.eliminar_factura(factura_id)
+            if exito:
+                messagebox.showinfo("Éxito", "Factura eliminada correctamente")
+                self.listar_facturas()
+            else:
+                messagebox.showerror("Error", "No se pudo eliminar la factura")
+
+    def modificar_factura(self, tabla):
+        
+        seleccion = tabla.selection()
+        if not seleccion:
+            messagebox.showwarning("Advertencia", "Seleccione una factura para modificar")
+            return
+
+        factura_id = tabla.item(seleccion[0])["values"][0]
+        factura = FacturaController.obtener_factura_por_id(factura_id)
+
+        if not factura:
+            messagebox.showerror("Error", "Factura no encontrada")
+            return
+
+        # Mostrar el formulario con los datos actuales
+        self.mostrar_formulario_crear()
+
+        # Preseleccionar cliente
+        for nombre, id_ in self.clientes_dict.items():
+            if id_ == factura.cliente_id:
+                self.cliente_combobox.set(nombre)
+                break
+
+        # Llenar tabla de items
+        for item in factura.items:
+            self.items_factura.append({
+                "producto_id": item.producto_id,
+                "producto_nombre": item.producto_nombre,
+                "precio": item.precio,
+                "cantidad": item.cantidad,
+                "subtotal": item.subtotal
+            })
+            self.tabla_items.insert("", tk.END, values=(
+                item.producto_nombre,
+                f"${item.precio:.2f}",
+                item.cantidad,
+                f"${item.subtotal:.2f}"
+            ))
+
+        # Actualizar total
+        total = sum(i["subtotal"] for i in self.items_factura)
+        self.total_var.set(f"Total: ${total:.2f}")
+        
+        # Botón para actualizar factura
+        ttk.Button(self.marco_formulario, text="Actualizar Factura", command=lambda: self.actualizar_factura(factura_id)).grid(row=2, column=0)
+    
+    def actualizar_factura(self, factura_id):
+        cliente_nombre = self.cliente_combobox.get()
+        if not cliente_nombre:
+            messagebox.showerror("Error", "Seleccione un cliente")
+            return
+
+        cliente_id = self.clientes_dict[cliente_nombre]
+        
+        if not self.items_factura:
+            messagebox.showerror("Error", "La factura no contiene productos")
+            return
+
+        resultado, mensaje = FacturaController.modificar_factura(factura_id, cliente_id, self.items_factura)
+        if resultado:
+            messagebox.showinfo("Éxito", mensaje)
+            self.listar_facturas()
+        else:
+            messagebox.showerror("Error", mensaje)
+
