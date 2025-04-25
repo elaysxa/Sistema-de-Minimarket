@@ -97,6 +97,15 @@ class FacturaController:
             return Factura.get_by_id(factura_id)
         except ValueError:
             return None
+    @staticmethod
+    def obtener_items_por_factura_id(factura_id):
+        """Devuelve los ítems de una factura dado su ID"""
+        try:
+            factura = Factura.get_by_id(int(factura_id))
+            return factura.items if factura else []
+        except Exception:
+            return []
+
 
     @staticmethod
     def eliminar_factura(factura_id):

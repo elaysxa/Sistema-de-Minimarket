@@ -1,33 +1,27 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
-from controller.factura_controller import FacturaController
+from tkinter import ttk, messagebox, simpledialog
+from tkinter import font
 from controller.cliente_controller import ClienteController
+from controller.factura_controller import FacturaController
 from controller.producto_controller import ProductoController
+from models.cliente import Cliente
+from models.factura import Factura
+
 
 class FacturaUI:
     def __init__(self, root):
         self.root = root
-        self.productos_disponibles = []
-        self.items_factura = []
-        self.total_var = tk.StringVar(value="Total: $0.00")
         self.setup_ui()
-
-        self.marco_botones = ttk.Frame(self.root)
-        self.marco_botones.pack(pady=10)
-
-        ttk.Button(self.marco_botones, text="Crear Factura", command=self.mostrar_formulario_crear).pack(side=tk.LEFT, padx=10)
-        ttk.Button(self.marco_botones, text="Listar Facturas", command=self.listar_facturas).pack(side=tk.LEFT, padx=10)
-
-        self.marco_formulario = ttk.Frame(self.root)
-        self.marco_formulario.pack(fill='both', expand=False)
+        self.crear_factura()
 
     def setup_ui(self):
+
         self.style = ttk.Style()
+        self.style.configure("TCombobox",  font=("Poppins", 11))
         self.style.configure("TFrame", background="#f0f0f0")
         self.style.configure("TButton", font=("Poppins", 11), padding=5)
         self.style.configure("TLabel", font=("Poppins", 11))
         self.style.configure("Header.TLabel", font=("Poppins", 14, "bold"), background="#2c3e50")
-
         self.style.configure("Treeview.Heading",
             background="white",
             bordercolor="#b3b3cc",
@@ -35,248 +29,445 @@ class FacturaUI:
             relief="flat",
             foreground="black",
             font=("Poppins", 11, "bold"),
-            padding=2)
-
+            padding=6)
+        
+        #Filas
         self.style.configure("Treeview",
             background="white",
             foreground="black",
             rowheight=28,
             fieldbackground="white",
             font=("Poppins", 10))
-
+        
         self.style.map("Treeview",
             background=[("selected", "#b3ecff")],
             foreground=[("selected", "black")])
 
-    def mostrar_formulario_crear(self):
-        for widget in self.marco_formulario.winfo_children():
-            widget.destroy()
+        self.sidebar = ttk.Frame(self.root, width=200)
+        self.sidebar.pack(side="left", fill="y")
 
-        self.items_factura = []
-        self.total_var.set("Total: $0.00")
+        self.btn_add = ttk.Button(self.sidebar, text="Crear Factura", command=self.crear_factura)
+        self.btn_add.pack(fill=tk.X, padx=10, pady=5)
 
-        ttk.Label(self.marco_formulario, text="Cliente:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=5)
-        self.cliente_combobox = ttk.Combobox(self.marco_formulario, width=40, state="readonly")
-        clientes = ClienteController.obtener_todos_clientes()
-        self.clientes_dict = {f"{c.nombre} (ID: {c.id})": c.id for c in clientes}
-        self.cliente_combobox['values'] = list(self.clientes_dict.keys())
-        self.cliente_combobox.grid(row=0, column=1, sticky=tk.W, padx=5, pady=5)
+        self.btn_delete = ttk.Button(self.sidebar, text="Eliminar Factura", command=self.eliminar_factura)
+        self.btn_delete.pack(fill=tk.X, padx=10, pady=5)
 
-        marco_tablas = ttk.Frame(self.marco_formulario)
-        marco_tablas.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
+        self.btn_refresh = ttk.Button(self.sidebar, text="Modificar Factura", command=self.modificar_factura)
+        self.btn_refresh.pack(fill=tk.X, padx=10, pady=5)
 
-        ttk.Label(marco_tablas, text="Productos disponibles").grid(row=0, column=0)
-        self.tabla_productos = ttk.Treeview(marco_tablas, columns=("nombre", "precio"), show="headings", height=12)
-        self.tabla_productos.heading("nombre", text="Nombre")
-        self.tabla_productos.heading("precio", text="Precio")
-        self.tabla_productos.column("nombre", width=200)
-        self.tabla_productos.column("precio", width=80)
-        self.tabla_productos.grid(row=1, column=0, padx=(0,2))
-        self.tabla_productos.bind("<Double-1>", self.agregar_producto)
+        self.btn_listar = ttk.Button(self.sidebar, text="Listar Facturas", command=self.mostrar_listado_facturas)
+        self.btn_listar.pack(fill=tk.X, padx=10, pady=5)
 
-        ttk.Label(marco_tablas, text="Items en factura").grid(row=0, column=1)
-        self.tabla_items = ttk.Treeview(marco_tablas, columns=("nombre", "precio", "cantidad", "subtotal"), show="headings", height=12)
-        self.tabla_items.heading("nombre", text="Nombre")
-        self.tabla_items.heading("precio", text="Precio")
-        self.tabla_items.heading("cantidad", text="Cantidad")
-        self.tabla_items.heading("subtotal", text="Subtotal")
-        for col in ("nombre", "precio", "cantidad", "subtotal"):
-            self.tabla_items.column(col, width=140)
-        self.tabla_items.grid(row=1, column=1, padx=10)
+        self.search_label = ttk.Label(self.sidebar, text="Buscar por cliente:")
+        self.search_label.pack(anchor="w", padx=10, pady=(20, 0))
 
-        ttk.Button(marco_tablas, text="Eliminar item", command=self.eliminar_item).grid(row=2, column=1, pady=10)
+        self.search_var = tk.StringVar()
+        self.search_entry = ttk.Entry(self.sidebar, textvariable=self.search_var)
+        self.search_entry.pack(fill=tk.X, padx=10, pady=5)
 
+        self.btn_search = ttk.Button(self.sidebar, text="Buscar", command=self.buscar_facturas)
+        self.btn_search.pack(fill=tk.X, padx=10)
 
-        contenedor_acciones = ttk.Frame(self.marco_formulario)
-        contenedor_acciones.grid(row=2, column=0, columnspan=2, sticky="ew", padx=10)
-        contenedor_acciones.columnconfigure(0, weight=1)  
+        self.topbar = ttk.Frame(self.root, height=50)
+        self.topbar.pack(side="top", fill="x")
+        self.topbar_label = ttk.Label(self.topbar, text="Listado de Facturas", font=("Arial", 13, "bold"))
+        self.topbar_label.pack(side="left", padx=20, pady=10)
 
-        # Botón a la izquierda
-        ttk.Button(marco_tablas, text="Guardar Factura", command=self.guardar_factura).grid(row=2, column=0,pady=10)
+        self.content = ttk.Frame(self.root)
+        self.content.pack(side="right", fill="both", expand=True, padx=10, pady=10)
 
-# Total a la derecha, ligeramente más arriba
-        ttk.Label(marco_tablas, textvariable=self.total_var, style="TLabel").grid(row=2, column=1, sticky="e", padx=5)
+        self.tree_columns = ("id", "cliente", "fecha", "total")
+        self.tree = ttk.Treeview(self.content, columns=self.tree_columns, show="headings")
 
-        self.cargar_productos()
+        for col in self.tree_columns:
+            self.tree.heading(col, text=col.capitalize())
 
-    def cargar_productos(self):
-        self.productos_disponibles = ProductoController.obtener_todos_productos()
-        for producto in self.productos_disponibles:
-            self.tabla_productos.insert("", tk.END, iid=producto.id, values=(producto.nombre, f"${producto.precio:.2f}"))
+        self.tree.column("id", width=60, anchor="center")
+        self.tree.column("cliente", width=200)
+        self.tree.column("fecha", width=120, anchor="center")
+        self.tree.column("total", width=100, anchor="e")
 
-    def agregar_producto(self, event):
-        seleccionado = self.tabla_productos.selection()
-        if not seleccionado:
-            return
-        producto_id = int(seleccionado[0])
-        producto = next((p for p in self.productos_disponibles if p.id == producto_id), None)
+        self.tree.pack(fill="both", expand=True)
+        self.scrollbar = ttk.Scrollbar(self.content, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=self.scrollbar.set)
+        self.scrollbar.pack(side="right", fill="y")
 
-        if producto:
-            ventana = tk.Toplevel(self.root)
-            ventana.title("Cantidad")
-            ventana.geometry("350x300")
+    def mostrar_listado_facturas(self):
+        self.limpiar_contenido()
+        self.topbar_label.config(text="Listado de Facturas")
 
-            ttk.Label(ventana, text=f"Cantidad de '{producto.nombre}':").pack(pady=5)
-            entrada_cantidad = ttk.Entry(ventana)
-            entrada_cantidad.pack(pady=5)
+        self.tree = ttk.Treeview(self.content, columns=("id", "cliente", "fecha", "total"), show="headings")
+        for col in ("id", "cliente", "fecha", "total"):
+            self.tree.heading(col, text=col.capitalize())
 
-            def confirmar():
-                try:
-                    cantidad = int(entrada_cantidad.get())
-                    if cantidad <= 0:
-                        raise ValueError
-                    subtotal = producto.precio * cantidad
-                    self.items_factura.append({
-                        "producto_id": producto.id,
-                        "nombre": producto.nombre,
-                        "precio": producto.precio,
-                        "cantidad": cantidad,
-                        "subtotal": subtotal
-                    })
-                    self.tabla_items.insert("", tk.END, values=(producto.nombre, f"${producto.precio:.2f}", cantidad, f"${subtotal:.2f}"))
-                    self.actualizar_total()
-                    ventana.destroy()
-                except ValueError:
-                    messagebox.showerror("Error", "Cantidad inválida")
+        self.tree.column("id", width=60, anchor="center")
+        self.tree.column("cliente", width=200)
+        self.tree.column("fecha", width=120, anchor="center")
+        self.tree.column("total", width=100, anchor="e")
 
-            ttk.Button(ventana, text="Agregar", command=confirmar).pack(pady=5)
+        self.tree.pack(fill="both", expand=True)
 
-    def eliminar_item(self):
-        seleccionado = self.tabla_items.selection()
-        if not seleccionado:
-            return
-        index = self.tabla_items.index(seleccionado[0])
-        self.tabla_items.delete(seleccionado[0])
-        del self.items_factura[index]
-        self.actualizar_total()
+        facturas = FacturaController.obtener_todas_facturas()
+        for factura in facturas:
+            cliente = Cliente.get_by_id(factura.cliente_id)
+            cliente_nombre = cliente.nombre if cliente else "Desconocido"
+            fecha = factura.fecha if factura.fecha else "N/A"
+            self.tree.insert("", "end", values=(factura.id, cliente_nombre, fecha, f"${factura.total:.2f}"))
 
-    def actualizar_total(self):
-        total = sum(item["subtotal"] for item in self.items_factura)
-        self.total_var.set(f"Total: ${total:.2f}")
-
-    def guardar_factura(self):
-        cliente_nombre = self.cliente_combobox.get()
-        if not cliente_nombre:
-            messagebox.showerror("Error", "Seleccione un cliente")
-            return
-
-        cliente_id = self.clientes_dict[cliente_nombre]
-
-        if not self.items_factura:
-            messagebox.showerror("Error", "La factura no contiene productos")
-            return
-
-        resultado, mensaje = FacturaController.crear_factura(cliente_id, self.items_factura)
-        if resultado:
-            messagebox.showinfo("Éxito", mensaje)
-            self.mostrar_formulario_crear()
-        else:
-            messagebox.showerror("Error", mensaje)
-
-    def listar_facturas(self):
-        for widget in self.marco_formulario.winfo_children():
-            widget.destroy()
-
-        ttk.Label(self.marco_formulario, text="Listado de Facturas").pack(pady=10)
-
-        tabla = ttk.Treeview(self.marco_formulario, columns=("id", "cliente", "total"), show="headings", height=15)
-        tabla.heading("id", text="ID")
-        tabla.heading("cliente", text="Cliente ID")
-        tabla.heading("total", text="Total")
-        tabla.column("id", width=100, anchor="center")
-        tabla.column("cliente", width=120, anchor="center")
-        tabla.column("total", width=100, anchor="center")
-        tabla.pack(padx=30, pady=10,  expand=True)
-                # Botones de acción para facturas
-        acciones_frame = ttk.Frame(self.marco_formulario)
-        acciones_frame.pack(pady=10)
-
-        ttk.Button(acciones_frame, text="Modificar Factura", command=lambda: self.modificar_factura(tabla)).pack(side=tk.LEFT, padx=10)
-        ttk.Button(acciones_frame, text="Eliminar Factura", command=lambda: self.eliminar_factura(tabla)).pack(side=tk.LEFT, padx=10)
-
-        for f in FacturaController.obtener_todas_facturas():
-            tabla.insert("", tk.END, values=(f.id, f.cliente_id, f.total))
-    
-    def eliminar_factura(self, tabla):
+    def modificar_factura(self):
+        factura_id = self.get_factura_id_seleccionada()
         
-        seleccion = tabla.selection()
-        if not seleccion:
-            messagebox.showwarning("Advertencia", "Seleccione una factura para eliminar")
+        if factura_id is None:
             return
 
-        factura_id = tabla.item(seleccion[0])["values"][0]
-
-        confirmar = messagebox.askyesno("Confirmar", f"¿Eliminar la factura ID {factura_id}?")
-        if confirmar:
-            exito = FacturaController.eliminar_factura(factura_id)
-            if exito:
-                messagebox.showinfo("Éxito", "Factura eliminada correctamente")
-                self.listar_facturas()
-            else:
-                messagebox.showerror("Error", "No se pudo eliminar la factura")
-
-    def modificar_factura(self, tabla):
-        
-        seleccion = tabla.selection()
-        if not seleccion:
-            messagebox.showwarning("Advertencia", "Seleccione una factura para modificar")
-            return
-
-        factura_id = tabla.item(seleccion[0])["values"][0]
-        factura = FacturaController.obtener_factura_por_id(factura_id)
-
+        factura = Factura.get_by_id(factura_id)
         if not factura:
-            messagebox.showerror("Error", "Factura no encontrada")
+            messagebox.showerror("Error", "Factura no encontrada.")
             return
 
-        # Mostrar el formulario con los datos actuales
-        self.mostrar_formulario_crear()
+        self.limpiar_contenido()
+        self.topbar_label.config(text=f"Modificar Factura #{factura.id}")
 
-        # Preseleccionar cliente
-        for nombre, id_ in self.clientes_dict.items():
-            if id_ == factura.cliente_id:
-                self.cliente_combobox.set(nombre)
-                break
+        clientes = Cliente.get_all()
+        productos = ProductoController.obtener_todos_productos()
+        items_factura = FacturaController.obtener_items_por_factura_id(factura.id)
+       
 
-        # Llenar tabla de items
-        for item in factura.items:
-            self.items_factura.append({
-                "producto_id": item.producto_id,
-                "producto_nombre": item.producto_nombre,
-                "precio": item.precio,
-                "cantidad": item.cantidad,
-                "subtotal": item.subtotal
-            })
-            self.tabla_items.insert("", tk.END, values=(
-                item.producto_nombre,
-                f"${item.precio:.2f}",
-                item.cantidad,
-                f"${item.subtotal:.2f}"
-            ))
+        ttk.Label(self.content, text="Cliente:").pack(anchor="w", padx=10, pady=5)
 
-        # Actualizar total
-        total = sum(i["subtotal"] for i in self.items_factura)
-        self.total_var.set(f"Total: ${total:.2f}")
+        cliente_var = tk.StringVar()
+        cliente_cb = ttk.Combobox(self.content, textvariable=cliente_var, state="readonly")
+
+        # Obtener todos los clientes
+        clientes = Cliente.get_all()
+        valores_clientes = [f"{c.id} - {c.nombre}" for c in clientes]
+
+        cliente_cb = ttk.Combobox(self.content, state="readonly")
+        cliente_cb["values"] = valores_clientes
+        cliente_cb.pack(fill="x", padx=10)
+
+        cliente_id = factura.cliente_id
+        cliente_actual = ClienteController.obtener_cliente_por_id(cliente_id)
+
+        if cliente_actual:
+            cliente_str = f"{cliente_actual.id} - {cliente_actual.nombre}"
+            cliente_cb.set(cliente_str)
         
-        # Botón para actualizar factura
-        ttk.Button(self.marco_formulario, text="Actualizar Factura", command=lambda: self.actualizar_factura(factura_id)).grid(row=2, column=0)
-    
-    def actualizar_factura(self, factura_id):
-        cliente_nombre = self.cliente_combobox.get()
-        if not cliente_nombre:
-            messagebox.showerror("Error", "Seleccione un cliente")
-            return
+        ttk.Label(self.content, text="Productos disponibles:").pack(anchor="w", padx=10, pady=10)
+        producto_tree = ttk.Treeview(self.content, columns=("id", "nombre", "precio", "stock"), show="headings", height=6)
+        for col in ("id", "nombre", "precio", "stock"):
+            producto_tree.heading(col, text=col.capitalize())
+        producto_tree.pack(fill="x", padx=10)
+        for p in productos:
+            producto_tree.insert("", "end", values=(p.id, p.nombre, f"${p.precio:.2f}", p.cantidad))
 
-        cliente_id = self.clientes_dict[cliente_nombre]
+        ttk.Label(self.content, text="Cantidad:").pack(anchor="w", padx=10, pady=5)
+        cantidad_var = tk.StringVar()
+        ttk.Entry(self.content, textvariable=cantidad_var).pack(fill="x", padx=10)
+
+        ttk.Label(self.content, text="Productos agregados:").pack(anchor="w", padx=10, pady=(10, 0))
+        items_tree = ttk.Treeview(self.content, columns=("producto_id", "nombre", "cantidad", "subtotal"), show="headings", height=5)
+        for col in ("producto_id", "nombre", "cantidad", "subtotal"):
+            items_tree.heading(col, text=col.capitalize())
+        items_tree.pack(fill="x", padx=10, pady=5)
+
+        items = []
+        total_var = tk.StringVar(value="Total $0.00")
+
+        # Cargar ítems actuales
+        for item in items_factura:
+            if item.producto_id is None:
+                continue
+            producto = ProductoController.obtener_producto_por_id(item.producto_id)
+            if producto:
+                subtotal = producto.precio * item.cantidad
+                items.append({"producto_id": producto.id, "cantidad": item.cantidad})
+                items_tree.insert("", "end", values=(producto.id, producto.nombre, item.cantidad, f"${subtotal:.2f}"))
+        total = sum(ProductoController.obtener_producto_por_id(i["producto_id"]).precio * i["cantidad"] for i in items)
+        total_var.set(f"Total: ${total:.2f}")
+
+        def agregar_item():
+            selected = producto_tree.selection()
+            if not selected:
+                messagebox.showwarning("Atención", "Seleccione un producto.")
+                return
+            producto_id = int(producto_tree.item(selected[0])["values"][0])
+            producto = next((p for p in productos if p.id == producto_id), None)
+            if not producto:
+                messagebox.showerror("Error", "Producto no válido.")
+                return
+            try:
+                cantidad = int(cantidad_var.get())
+                if cantidad <= 0:
+                    raise ValueError
+            except ValueError:
+                messagebox.showerror("Error", "Cantidad inválida.")
+                return
+            if cantidad > producto.cantidad:
+                messagebox.showerror("Error", "Stock insuficiente.")
+                return
+            subtotal = producto.precio * cantidad
+            items.append({"producto_id": producto.id, "cantidad": cantidad})
+            items_tree.insert("", "end", values=(producto.id, producto.nombre, cantidad, f"${subtotal:.2f}"))
+            total = sum(ProductoController.obtener_producto_por_id(i["producto_id"]).precio * i["cantidad"] for i in items)
+            total_var.set(f"Total: ${total:.2f}")
+
+        def eliminar_item():
+            seleccion = items_tree.selection()
+            if not seleccion:
+                messagebox.showwarning("Atención", "Seleccione un producto a eliminar.")
+                return
+            indice = items_tree.index(seleccion[0])
+            items.pop(indice)
+            items_tree.delete(seleccion[0])
+            total = sum(ProductoController.obtener_producto_por_id(i["producto_id"]).precio * i["cantidad"] for i in items)
+            total_var.set(f"Total: ${total:.2f}")
+
+        def guardar_cambios():
+            if not cliente_cb.get():
+                messagebox.showerror("Error", "Seleccione un cliente.")
+                return
+            if not items:
+                messagebox.showerror("Error", "Agregue al menos un producto.")
+                return
+            cliente_id = int(cliente_cb.get().split(" - ")[0])
+            exito, mensaje = FacturaController.modificar_factura(factura.id, cliente_id, items)
+            if exito:
+                messagebox.showinfo("Éxito", mensaje)
+                self.mostrar_listado_facturas()
+            else:
+                messagebox.showerror("Error", mensaje)
+
         
-        if not self.items_factura:
-            messagebox.showerror("Error", "La factura no contiene productos")
-            return
+        def modificar_cantidad():
+            seleccion = items_tree.selection()
+            if not seleccion:
+                messagebox.showwarning("Atención", "Seleccione un producto para modificar la cantidad.")
+                return
 
-        resultado, mensaje = FacturaController.modificar_factura(factura_id, cliente_id, self.items_factura)
-        if resultado:
+            item_index = items_tree.index(seleccion[0])
+            producto_id = items[item_index]["producto_id"]
+            producto = ProductoController.obtener_producto_por_id(producto_id)
+
+            if not producto:
+                messagebox.showerror("Error", "Producto no encontrado.")
+                return
+
+            nueva_cantidad_str = simpledialog.askstring("Modificar cantidad", f"Ingrese nueva cantidad para {producto.nombre}:")
+            if nueva_cantidad_str is None:
+                return  # Cancelado
+
+            try:
+                nueva_cantidad = int(nueva_cantidad_str)
+                if nueva_cantidad <= 0:
+                    raise ValueError
+                if nueva_cantidad > producto.cantidad:
+                    messagebox.showerror("Error", "Stock insuficiente.")
+                    return
+            except ValueError:
+                messagebox.showerror("Error", "Cantidad inválida.")
+                return
+
+            # Actualizar en lista interna
+            items[item_index]["cantidad"] = nueva_cantidad
+
+            # Actualizar en treeview
+            subtotal = producto.precio * nueva_cantidad
+            items_tree.item(seleccion[0], values=(producto.id, producto.nombre, nueva_cantidad, f"${subtotal:.2f}"))
+
+            # Recalcular total
+            total = sum(ProductoController.obtener_producto_por_id(i["producto_id"]).precio * i["cantidad"] for i in items)
+            total_var.set(f"Total: ${total:.2f}")
+        
+        boton_total_frame = ttk.Frame(self.content)
+        boton_total_frame.pack(pady=10)
+        ttk.Button(boton_total_frame, text="Agregar Producto", command=agregar_item).pack(side="left", padx=5)
+        ttk.Button(boton_total_frame, text="Eliminar Producto", command=eliminar_item).pack(side="left", padx=5)
+        ttk.Button(boton_total_frame, text="Guardar Cambios", command=guardar_cambios).pack(side="left", padx=5)
+        ttk.Button(boton_total_frame, text="Modificar Cantidad", command=modificar_cantidad).pack(side="left", padx=5)
+        ttk.Label(self.content, textvariable=total_var, font=("Poppins", 11, "bold")).pack(pady=5)
+
+    def load_facturas(self):
+        self.tree.delete(*self.tree.get_children())
+        facturas = FacturaController.obtener_todas_facturas()
+        for factura in facturas:
+            cliente = Cliente.get_by_id(factura.cliente_id)
+            cliente_nombre = cliente.nombre if cliente else "Desconocido"
+            fecha = factura.fecha if factura.fecha else "N/A"
+            self.tree.insert("", "end", values=(factura.id, cliente_nombre, fecha, f"${factura.total:.2f}"))
+
+    def buscar_facturas(self):
+        texto = self.search_var.get().strip().lower()
+        if not texto:
+            self.load_facturas()
+            return
+        clientes = Cliente.get_all()
+        clientes_filtrados = [c for c in clientes if texto in c.nombre.lower()]
+        ids_clientes = [c.id for c in clientes_filtrados]
+        facturas = FacturaController.obtener_todas_facturas()
+        facturas_filtradas = [f for f in facturas if f.cliente_id in ids_clientes]
+        self.tree.delete(*self.tree.get_children())
+        for factura in facturas_filtradas:
+            cliente = Cliente.get_by_id(factura.cliente_id)
+            cliente_nombre = cliente.nombre if cliente else "Desconocido"
+            fecha = factura.fecha if factura.fecha else "N/A"
+            self.tree.insert("", "end", values=(factura.id, cliente_nombre, fecha, f"${factura.total:.2f}"))
+
+    def get_factura_id_seleccionada(self):
+        seleccion = self.tree.selection()
+        if not seleccion:
+            messagebox.showwarning("Selección", "Seleccione una factura de la lista.")
+            return None
+        return self.tree.item(seleccion[0])["values"][0]
+
+    def eliminar_factura(self):
+        factura_id = self.get_factura_id_seleccionada()
+        if factura_id is None:
+            return
+        if not messagebox.askyesno("Confirmar", f"¿Eliminar factura con ID {factura_id}?"):
+            return
+        exito, mensaje = FacturaController.eliminar_factura(factura_id)
+        if exito:
             messagebox.showinfo("Éxito", mensaje)
-            self.listar_facturas()
+            self.load_facturas()
         else:
             messagebox.showerror("Error", mensaje)
 
+    def limpiar_contenido(self):
+        for widget in self.content.winfo_children():
+            widget.destroy()
+
+    def crear_factura(self):
+        self.limpiar_contenido()
+        self.topbar_label.config(text="Crear Factura")
+
+        clientes = Cliente.get_all()
+        productos = ProductoController.obtener_todos_productos()
+
+        ttk.Label(self.content, text="Cliente:").pack(anchor="w", padx=10, pady=5)
+        cliente_var = tk.StringVar()
+        cliente_cb = ttk.Combobox(self.content, textvariable=cliente_var, state="readonly", font="Poppins")
+        cliente_cb["values"] = [f"{c.id} - {c.nombre}" for c in clientes]
+        cliente_cb.pack(fill="x", padx=10)
+
+        ttk.Label(self.content, text="Productos disponibles:").pack(anchor="w", padx=10, pady=10)
+        producto_tree = ttk.Treeview(self.content, columns=("id", "nombre", "precio", "stock"), show="headings", height=6)
+        for col in ("id", "nombre", "precio", "stock"):
+            producto_tree.heading(col, text=col.capitalize())
+        producto_tree.pack(fill="x", padx=10)
+        for p in productos:
+            producto_tree.insert("", "end", values=(p.id, p.nombre, f"${p.precio:.2f}", p.cantidad))
+
+        ttk.Label(self.content, text="Cantidad:").pack(anchor="w", padx=10, pady=5)
+        cantidad_var = tk.StringVar()
+        ttk.Entry(self.content, textvariable=cantidad_var).pack(fill="x", padx=10)
+
+        ttk.Label(self.content, text="Productos agregados:").pack(anchor="w", padx=10, pady=(10, 0))
+        items_tree = ttk.Treeview(self.content, columns=("producto_id", "nombre", "cantidad", "subtotal"), show="headings", height=5)
+        for col in ("producto_id", "nombre", "cantidad", "subtotal"):
+            items_tree.heading(col, text=col.capitalize())
+        items_tree.pack(fill="x", padx=10, pady=5)
+
+        items = []
+        total_var = tk.StringVar(value="Total: $0.00")
+
+        def agregar_item():
+            selected = producto_tree.selection()
+            if not selected:
+                messagebox.showwarning("Atención", "Seleccione un producto.")
+                return
+            producto_id = int(producto_tree.item(selected[0])["values"][0])
+            producto = next((p for p in productos if p.id == producto_id), None)
+            if not producto:
+                messagebox.showerror("Error", "Producto no válido.")
+                return
+            try:
+                cantidad = int(cantidad_var.get())
+                if cantidad <= 0:
+                    raise ValueError
+            except ValueError:
+                messagebox.showerror("Error", "Cantidad inválida.")
+                return
+            if cantidad > producto.cantidad:
+                messagebox.showerror("Error", "Stock insuficiente.")
+                return
+            subtotal = producto.precio * cantidad
+            items.append({"producto_id": producto.id, "cantidad": cantidad})
+            items_tree.insert("", "end", values=(producto.id, producto.nombre, cantidad, f"${subtotal:.2f}"))
+            total = sum(ProductoController.obtener_producto_por_id(i["producto_id"]).precio * i["cantidad"] for i in items)
+            total_var.set(f"Total: ${total:.2f}")
+
+        def eliminar_item():
+            seleccion = items_tree.selection()
+            if not seleccion:
+                messagebox.showwarning("Atención", "Seleccione un producto a eliminar.")
+                return
+            indice = items_tree.index(seleccion[0])
+            items.pop(indice)
+            items_tree.delete(seleccion[0])
+            total = sum(ProductoController.obtener_producto_por_id(i["producto_id"]).precio * i["cantidad"] for i in items)
+            total_var.set(f"Total: ${total:.2f}")
+
+        def guardar_factura():
+            if not cliente_cb.get():
+                messagebox.showerror("Error", "Seleccione un cliente.")
+                return
+            if not items:
+                messagebox.showerror("Error", "Agregue al menos un producto.")
+                return
+            cliente_id = int(cliente_cb.get().split(" - ")[0])
+            exito, mensaje = FacturaController.crear_factura(cliente_id, items)
+            if exito:
+                messagebox.showinfo("Éxito", mensaje)
+                self.crear_factura()
+            else:
+                messagebox.showerror("Error", mensaje)
+        def modificar_cantidad():
+            seleccion = items_tree.selection()
+            if not seleccion:
+                messagebox.showwarning("Atención", "Seleccione un producto para modificar la cantidad.")
+                return
+
+            item_index = items_tree.index(seleccion[0])
+            producto_id = items[item_index]["producto_id"]
+            producto = ProductoController.obtener_producto_por_id(producto_id)
+
+            if not producto:
+                messagebox.showerror("Error", "Producto no encontrado.")
+                return
+
+            nueva_cantidad_str = simpledialog.askinteger("Modificar cantidad", f"Ingrese nueva cantidad para {producto.nombre}:")
+            if nueva_cantidad_str is None:
+                return  # Cancelado
+
+            try:
+                nueva_cantidad = int(nueva_cantidad_str)
+                if nueva_cantidad <= 0:
+                    raise ValueError
+                if nueva_cantidad > producto.cantidad:
+                    messagebox.showerror("Error", "Stock insuficiente.")
+                    return
+            except ValueError:
+                messagebox.showerror("Error", "Cantidad inválida.")
+                return
+
+            # Actualizar en lista interna
+            items[item_index]["cantidad"] = nueva_cantidad
+
+            # Actualizar en treeview
+            subtotal = producto.precio * nueva_cantidad
+            items_tree.item(seleccion[0], values=(producto.id, producto.nombre, nueva_cantidad, f"${subtotal:.2f}"))
+
+            # Recalcular total
+            total = sum(ProductoController.obtener_producto_por_id(i["producto_id"]).precio * i["cantidad"] for i in items)
+            total_var.set(f"Total: ${total:.2f}")
+
+        boton_total_frame = ttk.Frame(self.content)
+        boton_total_frame.pack(pady=10)
+
+        ttk.Button(boton_total_frame, text="Agregar Producto", command=agregar_item).pack(side="left", padx=5)
+        ttk.Button(boton_total_frame, text="Eliminar Producto", command=eliminar_item).pack(side="left", padx=5)
+        ttk.Button(boton_total_frame, text="Guardar Factura", command=guardar_factura).pack(side="left", padx=5)
+        ttk.Button(boton_total_frame, text="Modificar Cantidad", command=modificar_cantidad).pack(side="left", padx=5)
+
+        ttk.Label(boton_total_frame, textvariable=total_var, font=("Poppins", 12, "bold")).pack(side="left", padx=10)
