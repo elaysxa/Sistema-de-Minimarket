@@ -187,6 +187,7 @@ class FacturaController:
                 # Crear el item
                 item = ItemFactura(
                     producto_nombre=producto.nombre,
+                    producto_id=producto.id,
                     precio=producto.precio,
                     cantidad=cantidad,
                     subtotal=subtotal,
